@@ -1,0 +1,101 @@
+package edu.nuc.security.browser;
+
+import javax.sql.DataSource;
+
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
+import edu.nuc.security.core.propertie.SecurityProperties;
+import edu.nuc.security.core.validata.conf.ValidateCodeFilter;
+import edu.nuc.security.core.validata.mobile.authentication.conf.SmsCodeAuthenticationSecurityConfig;
+
+@Configuration
+public class BrowserSecurityConfig extends WebSecurityConfigurerAdapter {
+
+	//private Logger logger = LoggerFactory.getLogger(getClass());
+
+	@Autowired
+	private SecurityProperties securityProperties;
+
+	// 注入自定义登陆处理器
+	@Autowired
+	private AuthenticationSuccessHandler nucAuthenticationSuccessHandler;
+	
+	// 拦截器失败处理器
+	@Autowired
+	private AuthenticationFailureHandler nucAuthenticationFailHandler;
+	@Autowired
+	private ValidateCodeFilter validateCodeFilter;
+	
+	// 数据源
+	@Autowired
+	private DataSource dataSource;
+	// 用于调用记住我之后调用获取登陆服务(UserDetailsService已经在登陆验证的时候用MyUserDetails实现)
+	
+	@Autowired
+	private UserDetailsService userDetailsService;
+
+	@Autowired
+	private SmsCodeAuthenticationSecurityConfig smsCodeAuthenticationSecurityConfig;
+	// 密码加盐转码
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		
+		return new BCryptPasswordEncoder();
+	}
+
+	//记住我repository配置
+	@Bean
+	public PersistentTokenRepository persistentTokenRepository() {
+		JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+		//设置数据源
+		tokenRepository.setDataSource(dataSource);
+		// 设置数据源参数
+		tokenRepository.setCreateTableOnStartup(false);
+
+		return tokenRepository;
+	}
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+
+		//ValidateCodeFilter validateCodeFilter = new ValidateCodeFilter();
+        validateCodeFilter.setAuthenticationFailureHandler(nucAuthenticationFailHandler); 
+        validateCodeFilter.setSecurityProperties(securityProperties);
+		validateCodeFilter.afterPropertiesSet();
+		http
+		.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class)//在密码验证之前进行图形验证
+		.formLogin()
+		//http.httpBasic()
+		.loginPage("/authentication/require")
+		.loginProcessingUrl("/authentication/form")
+		.successHandler(nucAuthenticationSuccessHandler)//自定义登陆成功处理器
+		.failureHandler(nucAuthenticationFailHandler)//自定义登陆失败处理器
+		.and().rememberMe()//记住我配置
+		       .tokenRepository(persistentTokenRepository())//添加repository
+		       .tokenValiditySeconds(securityProperties.getBrowser().getRememberMeSeconds())//配置超时时间
+		       .userDetailsService(userDetailsService)//调取登陆方法实现
+		.and().authorizeRequests()// 身份认证配置
+				.antMatchers("/authentication/require",
+                      securityProperties.getBrowser().getLoginPage(),
+                      "/code/*")
+				.permitAll()
+				.anyRequest()// 需要授权
+				.authenticated()// 需要身份验证
+        .and().csrf().disable()//关闭CSRF
+		.apply(smsCodeAuthenticationSecurityConfig);
+	}
+}

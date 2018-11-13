@@ -1,0 +1,27 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "edu.nuc.security.core.propertie.SecurityProperties",
+      "name": "edu.nuc.security",
+      "type": "edu.nuc.security.core.propertie.SecurityProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "edu.nuc.security.core.propertie.SecurityProperties",
+      "name": "edu.nuc.security.browser",
+      "type": "edu.nuc.security.core.propertie.browser.BrowserProperties"
+    },
+    {
+      "sourceType": "edu.nuc.security.core.propertie.SecurityProperties",
+      "name": "edu.nuc.security.code",
+      "type": "edu.nuc.security.core.propertie.browser.validatacode.ValidateCodeProperties"
+    },
+    {
+      "sourceType": "edu.nuc.security.core.propertie.SecurityProperties",
+      "name": "edu.nuc.security.social",
+      "type": "edu.nuc.security.core.propertie.social.SocialProperties"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.nuc</groupId>
+  <artifactId>nuc-security-app</artifactId>
+  <parent>
+  	<groupId>edu.nuc.security</groupId>
+  	<artifactId>nuc-security</artifactId>
+  	<version>1.0.0-SNAPSHOT</version>
+  	<relativePath>../nuc-security</relativePath>
+  </parent>
+  <dependencies>
+    <dependency>
+        <groupId>edu.nuc</groupId>
+        <artifactId>nuc-security-core</artifactId>
+        <version>${edu.nuc.security.version}</version>
+    </dependency>
+      
+  </dependencies>
+</project>
